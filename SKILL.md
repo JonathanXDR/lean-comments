@@ -280,8 +280,8 @@ Delete:
 // A watchlist row.
 
 export interface FlickWatchlistItem {
-  media: FlickMedia
-  added_at: string
+  media: FlickMedia;
+  added_at: string;
 }
 ```
 
@@ -289,8 +289,8 @@ Correct:
 
 ```ts
 export interface FlickWatchlistItem {
-  media: FlickMedia
-  added_at: string
+  media: FlickMedia;
+  added_at: string;
 }
 ```
 
@@ -326,7 +326,7 @@ Delete:
 
 ```ts
 // Return the normalized result
-return normalize(result)
+return normalize(result);
 ```
 
 The code already communicates the action.
