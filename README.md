@@ -1,20 +1,24 @@
-# Lean Comments skill
+# lean-comments
 
-An Agent Skill that keeps a source-code comment only when it carries information the code cannot.
+An [Agent Skill](https://agentskills.io) that keeps a source-code comment only when it carries information the code and its context cannot.
 
-> [!NOTE]
-> This skill deletes comments, and it treats a cleanup that leaves most of them standing as unfinished. Its default is no comment, and it holds JSDoc and TSDoc to the same test. If you want the comments you already have improved rather than removed, this is the wrong skill.
+> [!IMPORTANT]
+> This skill deletes comments. It shortens and rewrites the ones that earn their place, and removes the rest rather than rewording them. If you want your existing comments polished where they stand, this is the wrong skill.
 
 ## Features
 
 - 🧹 **No comment by default:** Requires a reason to add a comment rather than a reason to remove one.
 - 🧭 **Necessity before wording:** Settles whether a comment should exist before touching how it reads.
-- 🚫 **No invented rationale:** Refuses to fabricate a security, performance, or compatibility reason to save a comment.
 - ✂️ **Deleted, not polished:** Removes an obvious comment instead of rewording it into something tidier.
-- 📐 **Documentation, not coverage:** Reviews JSDoc and TSDoc as critically as ordinary comments.
-- 🔒 **Directives preserved:** Leaves lint, compiler, coverage, and license comments untouched.
-- 🏷️ **Stale markers cleared:** Checks TODO, FIXME, and NOTE comments and drops the ones that no longer apply.
-- 📋 **Repository audits:** Runs a systematic sweep with a final acceptance check when you ask for one.
+- 🚫 **No invented rationale:** Refuses to invent a security, performance, or compatibility reason for keeping a comment.
+- 🔁 **Code over comment:** Renames a local or extracts a named boolean when that removes the need for one.
+- 📐 **Documentation, not coverage:** Documents a declaration for its contract, never merely for being exported.
+- 🌐 **Every comment form:** Applies one test to line comments, doc comments, docstrings, and file headers.
+- 👣 **Durable state only:** Describes the code at HEAD, never the diff, the pull request, or the review thread.
+- 🏷️ **Dead commentary:** Drops stale TODO, FIXME, and HACK markers, and commented-out code that serves no purpose.
+- 🔒 **Protected directives:** Preserves lint, compiler, and license comments, and drops a tooling directive only once proven obsolete.
+- 📜 **Your rules win:** Honors documented repository requirements, public API documentation contracts, and tooling rules.
+- 📋 **Repository audits:** Sweeps a whole repository on request, then checks the diff against a 17-item acceptance list.
 - 🎯 **Scoped diffs:** Touches maintained first-party code only, and skips generated and vendored content.
 
 ## 🚀 Quick Start
@@ -25,96 +29,94 @@ Install the skill with the [skills CLI](https://skills.sh):
 npx skills add JonathanXDR/lean-comments
 ```
 
-The CLI asks whether to install into the current project or globally for your user. Pass `-g` to skip the prompt and choose global.
+The CLI asks whether to install into the current project or globally for your user. Pass `-g` to skip the prompt and choose global. Global scope applies the policy to every repository you work in, so choose the project scope to keep it to this one.
 
-`SKILL.md` uses only fields from the [Agent Skills specification](https://agentskills.io/specification) and no vendor extensions, so any compatible client can load it. The [client showcase](https://agentskills.io/clients) links setup instructions for each one. To install by hand, put `SKILL.md` in a directory named `lean-comments` under your agent's skills directory, because the specification requires the directory name to match the `name` field.
+`SKILL.md` uses only fields from the [specification](https://agentskills.io/specification) and no vendor extensions, so any compatible client can load it. The [client showcase](https://agentskills.io/clients) links setup instructions for each client.
+
+To install by hand, put `SKILL.md` in a directory named `lean-comments` under your agent's skills directory. The specification requires the directory name to match the `name` field.
 
 ## 🧪 Usage
 
-Ask for comment work. The skill activates on requests to add, review, clean up, or audit comments, including JSDoc, TSDoc, TODO, FIXME, and NOTE. The leading `/lean-comments` below is Claude Code's explicit invocation form. Other clients use their own.
+Ask for comment work in plain language. The skill activates on requests to add, edit, review, clean up, or audit comments, including doc comments, docstrings, TODO, FIXME, NOTE, and suppressions. Claude Code also takes `/lean-comments` to invoke it explicitly, and other clients have their own form. Any of these reaches it:
 
 ```text
 /lean-comments audit the comments in src/
 Clean up the comments in this diff.
-Is this JSDoc worth keeping?
+Is this docstring worth keeping?
 Are there stale TODOs in this file?
 ```
 
-It also applies while you write code, so a new comment has to pass the same test before it lands. Ordinary implementation work stays narrow. The skill reviews the comments your change touches and does not start a repository-wide cleanup unless you ask for one.
+It also applies while you write code, so a new comment has to pass the same test before it lands. The skill reviews the comments your change touches and does not start a repository-wide cleanup unless you ask for one.
 
 ## 🔍 The Necessity Test
 
-Before keeping or adding a comment, remove it and ask:
+Before keeping or adding an ordinary comment, imagine it gone and ask:
 
 > Would a competent maintainer lose meaningful, non-obvious information if this comment did not exist?
 
 If no, it goes. If uncertain, it goes unless repository evidence shows the information matters. If yes, only the minimum stays.
 
-Being correct, harmless, already present, well written, security related, or attached to an export does not save a comment. Only the information does.
+None of this saves a comment: being correct, harmless, already present, well written, phrased as a warning, security related, or attached to an export. Only the information does.
 
-Narration is deleted rather than reworded, because the code already says it:
+The skill deletes narration rather than rewording it, because the code already says the same thing:
 
 ```ts
 // Return the normalized result
 return normalize(result);
 ```
 
-A constraint the code cannot show stays:
+A constraint the code cannot show stays, as long as the implementation or an external contract backs it:
 
 ```ts
 // Preserve source order because the upstream API matches items by position
 ```
 
-A label on a declaration is deleted rather than promoted to TSDoc:
+The skill deletes a label on a declaration outright, neither shortening it nor promoting it into documentation:
 
 ```ts
-// A watchlist row.
-export interface WatchlistItem {}
+// A watchlist row
+export interface WatchlistItem {
+  media: Media;
+  added_at: string;
+}
 ```
 
-Single-line `//` prose comments carry no terminal punctuation, so `// Preserve source order` is correct and `// Preserve source order.` is not.
+Whatever the delimiter, a single-line prose comment carries no terminal punctuation, so `// Preserve source order` is correct and `// Preserve source order.` is not. It opens with a capital unless a technical literal starts the line. Multi-sentence declaration documentation is exempt and uses ordinary sentence punctuation.
 
 ## 🔧 How It Works
 
-Every comment is evaluated against this order:
+The skill takes every ordinary comment, existing or proposed, through this order:
 
-| Order | Outcome                | Applies when                                          |
-| ----- | ---------------------- | ----------------------------------------------------- |
-| 1     | Delete or omit         | The information is already clear without it           |
-| 2     | Express through code   | A small readability change removes the need for it    |
-| 3     | Shorten                | It is necessary but wordy                             |
-| 4     | Rewrite                | It is necessary but unclear, inaccurate, or stale     |
-| 5     | Move to JSDoc or TSDoc | It belongs to the declaration's contract or semantics |
-| 6     | Keep unchanged         | It is already necessary, minimal, and accurate        |
+| Order | Outcome                       | Applies when                                                                        |
+| ----- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| 1     | Delete or omit                | The information is already clear without it                                         |
+| 2     | Express through code          | A tiny behavior-preserving readability change removes the need for it               |
+| 3     | Shorten                       | It is necessary but carries unnecessary information or words                        |
+| 4     | Rewrite                       | It is necessary but unclear, inaccurate, stale, awkward, or inconsistent            |
+| 5     | Use declaration documentation | The information belongs to the declaration's contract, semantics, or intended usage |
+| 6     | Keep unchanged                | It is already necessary, minimal, accurate, durable, and correctly styled           |
 
-The order is the point. Necessity is settled before wording, so an unnecessary comment is never polished into a better unnecessary comment, and never promoted into documentation to justify keeping it.
+The order is the point. The skill settles necessity before wording, so an unnecessary comment is never polished into a better unnecessary comment, and never promoted into documentation to justify keeping it.
 
-Some comments are exempt because their presence or exact syntax carries meaning. Lint directives, compiler directives, coverage directives, generated markers, required annotations, and license headers are left alone, as is anything generated, vendored, or third party.
+Some comments sit outside that order because their presence, position, or exact syntax carries meaning. Shebangs, lint and formatter directives, compiler and coverage directives, build tags, generated markers, and license headers keep their syntax exactly as written. A tooling directive holds that protection only while it is still required, and loses it once the repository or the tool proves it obsolete. Generated, vendored, and third-party files stay out of scope entirely. Comment-like text inside string literals, regular expressions, snapshots, and fixtures is data, not commentary.
 
 ## ⚠️ Limitations
 
 - This is judgment encoded as rules, not a linter. Two runs over the same borderline comment can disagree.
-- A comment whose reason the skill cannot find gets deleted. When the rationale lives only in a closed ticket or someone's memory, say so in the prompt.
-- The examples and the declaration-documentation rules assume TypeScript and JavaScript. The necessity test is language agnostic, but the guidance is thinner elsewhere.
+- A comment whose reason the skill cannot find gets deleted, so keep the reason where the skill can reach it. The issue tracker counts as evidence, closed tickets included, so point it at the ticket. Rationale that lives only in your prompt or someone's memory will not save a comment.
+- Every worked example is TypeScript. The rules are language agnostic and name JSDoc, TSDoc, JavaDoc, KDoc, Rust and Go doc comments, C# XML documentation, and Python docstrings, but you will not find your own syntax demonstrated.
 
 ## 🛠️ Development
 
-Validate `SKILL.md` against the reference library from the [Agent Skills specification repository](https://github.com/agentskills/agentskills/tree/main/skills-ref). The published package still names its executable `agentskills` while upstream has renamed it to `skills-ref`, so the pin keeps the command working until a release ships the new name:
+Validate `SKILL.md` against the reference library from the [Agent Skills specification repository](https://github.com/agentskills/agentskills/tree/main/skills-ref). The published package is named `skills-ref` while the executable inside it is named `agentskills`, so the command names both:
 
 ```bash
 uvx --from 'skills-ref==0.1.1' agentskills validate "$PWD"
 ```
 
-Installing from the repository source instead keeps the `skills-ref` name that the specification uses:
-
-```bash
-uvx --from 'git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref' \
-  skills-ref validate "$PWD"
-```
-
 Pass `$PWD` rather than `.`, because the validator compares the last segment of the path against the `name` field and `.` gives it nothing to compare.
 
-Neither command checks the specification's size guidance, and `SKILL.md` already sits close to the line ceiling. Measure both numbers before adding to it:
+The validator reads the frontmatter and stops there, so it says nothing about the specification's size guidance. By the rough estimate below, `SKILL.md` already sits near the 500 line guidance and past the 5,000 token one. Measure both before adding to it, and expect to cut something in exchange:
 
 ```bash
 grep -c '' SKILL.md                               # lines, guidance 500
@@ -123,8 +125,8 @@ awk '/^---$/{c++; next} c>=2' SKILL.md | wc -c    # body chars, roughly 4 per to
 
 ## ⛰️ Next Steps
 
-1. 📖 Read [`SKILL.md`](./SKILL.md) for the complete rule set, including the repository audit checklist.
-2. 🧩 Read the [specification](https://agentskills.io/specification) if you want to fork these conventions into a skill of your own.
+1. 📖 Read [`SKILL.md`](./SKILL.md) for the complete rule set, including the audit procedure and its acceptance check.
+2. 🧩 Read the [specification](https://agentskills.io/specification) if you want to package a skill of your own.
 3. 🐛 Hit a bug or have an idea? [Open an issue](https://github.com/JonathanXDR/lean-comments/issues).
 
 ## ⚖️ License
