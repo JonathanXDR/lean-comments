@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "lean-comments",
+  "description": "Keeps a source-code comment only when it carries information the code and its context cannot. Audits, writes, and refines comments, doc comments, and docstrings across languages.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jonathan Russ",
+    "url": "https://github.com/JonathanXDR"
+  },
+  "homepage": "https://github.com/JonathanXDR/lean-comments",
+  "repository": "https://github.com/JonathanXDR/lean-comments",
+  "license": "MIT",
+  "keywords": ["comments", "documentation", "code-review", "docstrings", "jsdoc", "tsdoc"]
+}
