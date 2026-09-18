@@ -10,20 +10,20 @@ An [Agent Skill](https://agentskills.io) that keeps a source-code comment only w
 - 🧹 **No comment by default:** Requires a reason to add a comment rather than a reason to remove one.
 - 🧭 **Necessity before wording:** Settles whether a comment should exist before touching how it reads.
 - ✂️ **Deleted, not polished:** Removes an obvious comment instead of rewording it into something tidier.
-- 🚫 **No invented rationale:** Refuses to invent a security, performance, or compatibility reason for keeping a comment.
+- 🚫 **No invented rationale:** Refuses to invent a reason for keeping a comment.
 - 🔁 **Code over comment:** Renames a local or extracts a named boolean when that removes the need for one.
 - 📐 **Documentation, not coverage:** Documents a declaration for its contract, never merely for being exported.
 - 🌐 **Every comment form:** Applies one test to line comments, doc comments, docstrings, and file headers.
 - 👣 **Durable state only:** Describes the code at HEAD, never the diff, the pull request, or the review thread.
-- 🏷️ **Dead commentary:** Drops stale TODO, FIXME, and HACK markers, and commented-out code that serves no purpose.
-- 🔒 **Protected directives:** Preserves lint, compiler, and license comments, and drops a tooling directive only once proven obsolete.
-- 📜 **Your rules win:** Honors documented repository requirements, public API documentation contracts, and tooling rules.
-- 📋 **Repository audits:** Sweeps a whole repository on request, then checks the diff against a 17-item acceptance list.
+- 🏷️ **Dead commentary:** Drops stale TODO and FIXME markers, and purposeless commented-out code.
+- 🔒 **Protected directives:** Preserves lint, compiler, and license comments until proven obsolete.
+- 📜 **Your rules first:** Honors documented repository, API documentation, and tooling requirements.
+- 📋 **Repository audits:** Sweeps a repository on request, then checks the diff against 17 criteria.
 - 🎯 **Scoped diffs:** Touches maintained first-party code only, and skips generated and vendored content.
 
 ## 🚀 Quick Start
 
-Install the skill with the [skills CLI](https://skills.sh):
+Install the skill with the [skills CLI](https://skills.sh/docs/cli):
 
 ```bash
 npx skills add JonathanXDR/lean-comments
@@ -104,19 +104,21 @@ Some comments sit outside that order because their presence, position, or exact 
 
 - This is judgment encoded as rules, not a linter. Two runs over the same borderline comment can disagree.
 - A comment whose reason the skill cannot find gets deleted, so keep the reason where the skill can reach it. The issue tracker counts as evidence, closed tickets included, so point it at the ticket. Rationale that lives only in your prompt or someone's memory will not save a comment.
-- Every worked example is TypeScript. The rules are language agnostic and name JSDoc, TSDoc, JavaDoc, KDoc, Rust and Go doc comments, C# XML documentation, and Python docstrings, but you will not find your own syntax demonstrated.
+- Every worked example is TypeScript. The rules are language agnostic and name JSDoc, TSDoc, JavaDoc, KDoc, Rust and Go doc comments, C# XML documentation, and Python docstrings, but no worked example shows your own syntax.
 
 ## 🛠️ Development
 
-Validate `SKILL.md` against the reference library from the [Agent Skills specification repository](https://github.com/agentskills/agentskills/tree/main/skills-ref). The published package is named `skills-ref` while the executable inside it is named `agentskills`, so the command names both:
+Two checks run in CI on `main` and on every pull request, defined in [`validate.yml`](./.github/workflows/validate.yml). Run them locally in the same order.
+
+Validate the skill's frontmatter and naming against the reference library from the [Agent Skills specification repository](https://github.com/agentskills/agentskills/tree/main/skills-ref):
 
 ```bash
 uvx --from 'skills-ref==0.1.1' agentskills validate "$PWD"
 ```
 
-Pass `$PWD` rather than `.`, because the validator compares the last segment of the path against the `name` field and `.` gives it nothing to compare.
+The published package is named `skills-ref` while the executable inside it is named `agentskills`, so the command names both. Pass `$PWD` rather than `.`, because the validator compares the last segment of the path against the `name` field and `.` gives it nothing to compare.
 
-The validator reads the frontmatter and stops there, so it says nothing about the specification's size guidance. By the rough estimate below, `SKILL.md` already sits near the 500 line guidance and past the 5,000 token one. Measure both before adding to it, and expect to cut something in exchange:
+The validator reads the frontmatter and stops there, so CI measures the size budgets separately. `SKILL.md` already sits near the 500 line guidance and past the 5,000 token one, so the workflow enforces the line budget and reports the token estimate without failing on it. Measure both before adding to it, and expect to cut something in exchange:
 
 ```bash
 grep -c '' SKILL.md                               # lines, guidance 500
