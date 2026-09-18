@@ -1,0 +1,30 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Validate skill frontmatter and naming
+        # PyPI skills-ref 0.1.1 ships its executable as agentskills. Upstream has
+        # renamed it to skills-ref on main, so the pin keeps the invocation working
+        # until a release ships the new name.
+        #
+        # The repository root is the skill directory, so the validator compares the
+        # checkout's own name against the frontmatter name field.
+        run: uvx --from 'skills-ref==0.1.1' agentskills validate "$PWD"
+      - name: Check SKILL.md size budgets
+        # The line budget is enforced. The token estimate is reported but not enforced,
+        # because this skill is knowingly over the 5,000 token guidance and the README
+        # says so. Tighten the rules before raising the ceiling.
+        run: |
+          lines=$(wc -l < SKILL.md)
+          chars=$(awk '/^---$/{c++; next} c>=2' SKILL.md | wc -c)
+          echo "SKILL.md: $lines lines, body $chars chars (~$((chars / 4)) tokens against a 5,000 guidance)"
+          test "$lines" -le 500
